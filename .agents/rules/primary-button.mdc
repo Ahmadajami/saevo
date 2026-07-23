@@ -1,0 +1,34 @@
+---
+name: primary-button
+trigger: model_decision
+description: "Guidelines enforcing the use of GoldButton (from src/lib/components/app/gold-button.svelte) as the primary button across the application."
+globs: "**/*.svelte"
+alwaysApply: true
+---
+
+# Primary Button Usage Guidelines
+
+To maintain consistent branding and user experience across the application, follow these guidelines for primary action buttons:
+
+## 1. Use GoldButton for Primary Actions
+
+Always use `GoldButton` (imported from `$lib/components/app/gold-button.svelte`) for the primary Call-To-Action (CTA) on any page or form.
+Avoid using the raw Shadcn `Button` component with custom styling or other custom buttons for primary actions.
+
+### Correct Usage:
+```svelte
+<script lang="ts">
+	import GoldButton from '$lib/components/app/gold-button.svelte';
+</script>
+
+<GoldButton onclick={handleClick}>
+	Acquire Now
+</GoldButton>
+```
+
+## 2. Component Design & Props
+
+`GoldButton` wraps the Shadcn `Button` component and inherits all `ButtonProps` (e.g., `disabled`, `type`, `size`, etc.), ensuring it is fully compatible.
+
+- Custom classes can be passed using the standard Svelte 5 `class` property if minor layout adjustments are needed.
+- Use `Snippet` children for content.
