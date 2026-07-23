@@ -1,0 +1,19 @@
+---
+description: "Model architecture, folder structure, business logic, Zod validation, and on-demand CRUD rules"
+globs: "src/lib/server/**"
+alwaysApply: true
+---
+
+## Model Architecture & Business Logic Rules
+
+1. **Dedicated Model Folders**:
+   - For each entity/domain model (e.g., `users`, `products`, `orders`, `customizations`), maintain a dedicated directory under `src/lib/server/models/<model-name>/`.
+   - Organize business logic (BL) and database CRUD operations cleanly inside this directory.
+
+2. **On-Demand CRUD Implementation**:
+   - **No Speculative CRUD Boilerplate**: Do NOT generate complete/full CRUD functions (Create, Read, Update, Delete) speculatively up front for models.
+   - **Lazy / Just-In-Time Creation**: Write and expose specific CRUD methods and business logic operations only when required by active feature requests or server load actions.
+
+3. **Strict Zod Input Validation for Business Logic (BL)**:
+   - **Mandatory Zod Schemas**: Every input, payload, or argument passed into Business Logic (BL) functions and model services must be strictly validated using a **Zod schema**.
+   - Define reusable Zod schemas alongside the model logic (e.g., `src/lib/server/models/<model-name>/schema.ts` or inline Zod validators) to guarantee type safety and runtime data integrity before executing database queries or domain logic.
