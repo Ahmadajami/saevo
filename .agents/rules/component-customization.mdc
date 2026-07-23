@@ -1,0 +1,268 @@
+---
+name: component-customization
+trigger: model_decision
+description: 'Rules for customizing UI components, Svelte local declaration tags (let/const in markup), extending/wrapping Shadcn-Svelte components, typed styling & ClassValue, keyed each blocks, icon imports, typed route resolution, and standard state components usage (Loader, Error, Empty, Unauthorized).'
+---
+
+# UI Component Customization Guidelines
+
+To maintain upgradeability and cleanly separate application-specific design/logic from primitive components:
+
+## 1. No Direct Edits to Shadcn Primitives
+
+- **Rule:** Never modify files directly inside `src/lib/components/ui/`.
+- **Reason:** These are imported Shadcn-Svelte primitive components. Direct modifications will be overwritten or cause merge conflicts when components are updated or re-installed via the CLI.
+
+## 2. Extend/Wrap Components in `src/lib/components/app/`
+
+- **Rule:** If you need customized behavior, specific styling variants, or composed elements based on Shadcn primitives, create a new custom component under `src/lib/components/app/` (e.g., `src/lib/components/app/custom-button.svelte`).
+- **Example:**
+
+  ```svelte
+  <script lang="ts">
+  	import type { Snippet } from 'svelte';
+  	import { Button, type ButtonProps } from '$lib/components/ui/button';
+
+  	let { children, ...restProps }: { children?: Snippet } & ButtonProps = $props();
+  </script>
+
+  <!-- Wrap the primitive and apply app-specific enhancements -->
+  <Button {...restProps}>
+  	{@render children?.()}
+  </Button>
+  ```
+
+## 3. Typed Styling & `ClassValue`
+
+- **Rule:** For component styling customization, always use type-safe classes leveraging `ClassValue` from `svelte/elements`. Avoid `any` types for props; instead, use Svelte element attribute types (e.g., `HTMLAttributes<HTMLDivElement>`, `HTMLButtonAttributes` from `svelte/elements`) or specific component prop types from Shadcn.
+- **Rule (Import Location):** Never import HTML element attribute types (like `HTMLAttributes`, `HTMLButtonAttributes`, `SVGAttributes`, etc.) from `'svelte'`. They **must** be imported from `'svelte/elements'` (e.g. `import type { HTMLAttributes } from 'svelte/elements'`). Svelte-specific template utilities (like `Snippet` or `Component`) are imported from `'svelte'`.
+- **Class Passing Syntax:** Use an array to merge base classes and custom classes passed via props:
+
+  ```svelte
+  <script lang="ts">
+  	import type { HTMLAttributes } from 'svelte/elements';
+
+  	let { class: className, children, ...restProps }: HTMLAttributes<HTMLDivElement> = $props();
+  </script>
+
+  <div class={['original-class', className]} {...restProps}>
+  	{@render children?.()}
+  </div>
+  ```
+
+- **Usage Flexibility:** This allows users of your components to pass classes as strings, arrays, or objects:
+  ```svelte
+  <CustomComponent class={{ 'bg-blue-700 sm:w-1/2': isActive }} />
+  ```
+
+## 4. Keyed Each Blocks
+
+- **Rule:** Every `{#each}` block written must provide a key to ensure proper keyed rendering.
+- **Key Uniqueness:** Make sure the key is unique (e.g., database IDs).
+- **Fallback:** If a unique database or logic key is not available, use the loop index as the key.
+- **Example:**
+
+  ```svelte
+  {#each items as item, index (item.id)}
+  	<p>{item.name}</p>
+  {/each}
+
+  <!-- Fallback using index -->
+  {#each simpleList as name, index (index)}
+  	<p>{name}</p>
+  {/each}
+  ```
+
+## 5. Icon Imports
+
+- **Rule:** Always import icons inside a module script tag (`<script lang="ts" module>`), never inside the normal component script tag.
+- **Import Syntax:** Icons must be imported individually as default imports. Do NOT use destructured imports.
+- **Example:**
+  ```svelte
+  <script lang="ts" module>
+  	// GOOD: Individual default imports
+  	import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
+  </script>
+  ```
+- **Never Do This:**
+  ```svelte
+  <script lang="ts" module>
+  	// BAD: Destructured imports from the main entrypoint
+  	import { ArrowUp, Globe } from '@lucide/svelte';
+  </script>
+  ```
+- **Passing & Typing Icons dynamically:** When storing icons in data arrays or passing them as props, use Svelte 5 component typing. Ensure imports are still in the module script:
+
+  ```svelte
+  <script lang="ts" module>
+  	import HomeIcon from '@lucide/svelte/icons/home';
+  	import LibraryIcon from '@lucide/svelte/icons/library';
+  	import CogIcon from '@lucide/svelte/icons/cog';
+  </script>
+
+  <script lang="ts">
+  	import type { Component } from 'svelte';
+
+  	type MenuItem = {
+  		name: string;
+  		href: string;
+  		icon: Component;
+  	};
+
+  	const menuItems: MenuItem[] = [
+  		{
+  			name: 'Home',
+  			href: '/',
+  			icon: HomeIcon
+  		},
+  		{
+  			name: 'Blog',
+  			href: '/blog',
+  			icon: LibraryIcon
+  		},
+  		{
+  			name: 'Projects',
+  			href: '/projects',
+  			icon: CogIcon
+  		}
+  	];
+  </script>
+
+  {#each menuItems as item, index (item.name)}
+  	{@const Icon = item.icon}
+  	<a href={item.href}>
+  		<Icon />
+  		<span>{item.name}</span>
+  	</a>
+  {/each}
+  ```
+
+## 6. Svelte Local Declaration Tags
+
+- **Rule:** Declaration tags define local variables inside markup with `const` or `let`:
+
+<!-- codeblock:start {"title":"Declaration tags"} -->
+```svelte
+<!--- file: App.svelte --->
+<script>
+	let boxes = [{ width: 10, height: 10 }, { width: 15, height: 15 }];
+</script>
+
+{#each boxes as box}
+	{const area = box.width * box.height}
+	{const label = `${box.width} ⨉ ${box.height} = ${area}`}
+
+	<p>{label}</p>
+{/each}
+```
+<!-- codeblock:end -->
+
+> [!NOTE] Declaration tags are available since Svelte 5.56.
+
+> [!NOTE] The [`{@const ...}`](@const) syntax is considered legacy — use declaration tags instead.
+
+When values should be reactive, you can use `$state` and `$derived`:
+
+<!-- codeblock:start {"title":"Reactive declaration tags"} -->
+```svelte
+<!--- file: App.svelte --->
+<script>
+	let user = $state({ name: 'Svelte' });
+	let editing = $state(false);
+</script>
+
+<p>Hello {user.name}</p>
+<button onclick={() => editing = true}>edit name</button>
+
+{#if editing}
+	{let name = $state(user.name)}
+	{const greeting = $derived(`Hello ${name}`)}
+
+	<hr>
+	<input bind:value={name} />
+	<p>{greeting}</p>
+
+	<button onclick={() => {
+		user.name = name;
+		editing = false;
+	}}>save</button>
+{/if}
+```
+<!-- codeblock:end -->
+
+Declaration tags can be used anywhere inside the component. They can reference values declared outside themselves (for example in the `<script>` tag or in `{#each ...}` blocks) and are 'visible' to everything in the same lexical scope (i.e. siblings, and children of those siblings):
+
+<!-- codeblock:start {"title":"Declaration tag scope"} -->
+```svelte
+<!--- file: App.svelte --->
+{const hello = 'hello'}
+{hello} <!-- 'hello' -->
+<div>
+	{const hello = 'hi'}
+	{hello} <!-- 'hi' -->
+	<div>
+		{hello} <!-- 'hi' -->
+	</div>
+</div>
+{hello} <!-- 'hello' -->
+```
+<!-- codeblock:end -->
+
+
+## 7. Keep Clean Separation
+
+- Keep `src/lib/components/ui/` pure and vendor-managed.
+- Keep `src/lib/components/app/` for project-specific custom components, compositions, and overrides.
+
+## 8. Typed Links & Route Resolution
+
+- **Rule:** When rendering links or defining paths for `href` attributes, always resolve them using the `resolve` function from `$app/paths` for better TypeScript typing and to handle base paths correctly.
+- **Typing:** Use types like `Pathname`, `RouteIdWithSearchOrHash`, or `PathnameWithSearchOrHash` from `$app/types` when defining path/URL parameters or component props.
+- **Example/Docs:**
+
+  ```ts
+  import { resolve } from '$app/paths';
+
+  // using a pathname
+  const resolved = resolve(`/blog/hello-world`);
+
+  // using a route ID plus parameters
+  const resolved = resolve('/blog/[slug]', {
+  	slug: 'hello-world'
+  });
+  ```
+
+  Signature:
+  ```ts
+  function resolve<
+  	T extends
+  		| RouteIdWithSearchOrHash
+  		| PathnameWithSearchOrHash
+  >(...args: ResolveArgs<T>): ResolvedPathname;
+  ```
+
+- **Localization Example (Casting to `Pathname`):**
+  When using localization libraries (like paraglide) that dynamicize paths, cast localized URLs to `Pathname` from `$app/types` before passing them to `resolve()`:
+
+  ```svelte
+  <script lang="ts">
+  	import type { Pathname } from '$app/types';
+  	import { resolve } from '$app/paths';
+  	import { page } from '$app/state';
+  	import { locales, localizeHref } from '$lib/paraglide/runtime';
+  	import favicon from '$lib/assets/favicon.svg';
+
+  	let { children } = $props();
+  </script>
+
+  <svelte:head><link rel="icon" href={favicon} /></svelte:head>
+  {@render children()}
+
+  <div style="display:none">
+  	{#each locales as locale (locale)}
+  		<a
+  			href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)}
+  		>{locale}</a>
+  	{/each}
+  </div>
+  ```

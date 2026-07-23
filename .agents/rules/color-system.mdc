@@ -1,0 +1,35 @@
+---
+name: color-system
+trigger: model_decision
+description: "Guidelines enforcing Shadcn CSS variable color mappings (e.g., bg-background, text-foreground, border-border) instead of custom brand colors unless explicitly required by design."
+globs: "**/*.{svelte,css}"
+alwaysApply: true
+---
+
+# Styling & Color System Guidelines
+
+To ensure robust theme support (light and dark modes) and maintain consistent UI styling across components, follow these guidelines for colors:
+
+## 1. Prefer Shadcn Color Variables
+
+Always use the standard Shadcn Tailwind utility mappings. Avoid hardcoding custom hex values or project-specific colors unless there is a mandatory branding requirement.
+
+| Tailwind Class | Mapped CSS Variable | Usage |
+| :--- | :--- | :--- |
+| `bg-background` / `text-foreground` | `--background` / `--foreground` | Main page body, cards, and text |
+| `bg-card` / `text-card-foreground` | `--card` / `--card-foreground` | Container cards and boxes |
+| `bg-primary` / `text-primary-foreground` | `--primary` / `--primary-foreground` | Call-to-actions, highlighted active states |
+| `bg-secondary` / `text-secondary-foreground` | `--secondary` / `--secondary-foreground` | Subtle secondary actions and buttons |
+| `bg-muted` / `text-muted-foreground` | `--muted` / `--muted-foreground` | Disabled, placeholder, or deactivated elements |
+| `border-border` | `--border` | Dividers, borders, and lines |
+| `bg-input` | `--input` | Input borders and elements |
+| `ring-ring` | `--ring` | Active focus rings and states |
+
+## 2. When to Use Custom Brand Colors
+
+- **Rule:** Only use custom brand colors (e.g., `gold`, `gold-bright`, `gold-dim`, `obsidian`, `char`, `ivory`) when implementing specific branded components or layouts that *must* maintain a specific color combination regardless of light/dark themes (e.g., a signature luxury gold border CTA button or fixed dark hero page).
+- **Rule:** If custom styling is used, prefer accessing them via Tailwind custom theme variables (e.g., `text-gold`, `bg-obsidian`) rather than raw hex codes like `#08080a`.
+
+## 3. Ensure Light/Dark Theme Adaptability
+
+By using standard Shadcn color variables, components will automatically adapt when switching between light and dark modes. Avoid hardcoding styles that prevent theme switching.

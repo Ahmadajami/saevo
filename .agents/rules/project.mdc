@@ -1,0 +1,11 @@
+---
+description: "General project configuration and technology stack settings"
+globs: "*"
+alwaysApply: true
+---
+
+## Project Configuration
+
+- **Language**: TypeScript
+- **Package Manager**: pnpm
+- **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, drizzle, mcp, paraglide
