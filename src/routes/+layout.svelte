@@ -1,4 +1,6 @@
 <script lang="ts">
+	import '@fontsource-variable/montserrat';
+	import '@fontsource-variable/merriweather';
 	import './layout.css';
 	import { ModeWatcher } from 'mode-watcher';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
